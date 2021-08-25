@@ -6,7 +6,7 @@
         private array $values = ["A", "B", "C", "D"];
         private int $cash = 100;
 
-        public array $slots = [
+        private array $slots = [
             [" ", " ", " "],
             [" ", " ", " "],
             [" ", " ", " "]
