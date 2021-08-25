@@ -13,10 +13,10 @@
         ];
 
         private array $betCoefficient = [
-            10 => 1,
-            20 => 2,
-            40 => 3,
-            80 => 4
+            1 => 10,
+            2 => 20,
+            3 => 40,
+            4 => 80
         ];
 
         private array $valueCoefficient = [
@@ -30,6 +30,10 @@
             return $this->cash;
         }
 
+        function getBetCoefficient(): array {
+            return $this->betCoefficient;
+        }
+
         function displayBoard(){
             echo " {$this->slots[0][0]} | {$this->slots[0][1]} | {$this->slots[0][2]} \n";
             echo "-----------\n";
@@ -41,54 +45,65 @@
         function spinSlotMachine(): void {
             for($i = 0; $i < count($this->slots); $i++){
                 for($j = 0; $j < count($this->slots[$i]); $j++){
-                    $this->slots[$i][$j] = rand(0, count($this->values)-1);
+                    $this->slots[$i][$j] = $this->values[rand(0, count($this->values)-1)];
                 }
             }
         }
 
-        function winningConditions(int $bet){
-            $hasWon = 0;
+        function winningConditions(int $bet): string {
             for($i = 0; $i <= 2; $i++){
                 if($this->slots[$i][0] === $this->slots[$i][1] && $this->slots[$i][1] === $this->slots[$i][2]){
-                    $this->cash += $this->valueCoefficient[$this->slots[$i][0]] * $this->betCoefficient[$bet];
-                    $hasWon++;
+                    $hasWon = $this->valueCoefficient[array_search($this->slots[$i][0], $this->values)] * array_search($bet, $this->betCoefficient);
+                    $this->cash += $hasWon;
+                    return "You won $hasWon\n";
                 }
             }
             if($this->slots[0][0] === $this->slots[1][1] && $this->slots[1][1] === $this->slots[2][2]){
-                $this->cash += $this->valueCoefficient[$this->slots[0][0]] * $this->betCoefficient[$bet];
-                $hasWon++;
+                $hasWon = $this->valueCoefficient[array_search($this->slots[0][0], $this->values)] * array_search($bet, $this->betCoefficient);
+                $this->cash += $hasWon;
+                return "You won $hasWon\n";
             }
             if($this->slots[2][0] === $this->slots[1][1] && $this->slots[1][1] === $this->slots[0][2]){
-                $this->cash += $this->valueCoefficient[$this->slots[2][0]] * $this->betCoefficient[$bet];
-                $hasWon++;
+                $hasWon = $this->valueCoefficient[array_search($this->slots[2][0], $this->values)] * array_search($bet, $this->betCoefficient);
+                $this->cash += $hasWon;
+                return "You won $hasWon\n";
             }
-            if($hasWon === 0){
                 $this->cash = $this->cash - $bet;
-            }
+                return "You lost $bet\n";
         }
 
     }
 
     $newGame = new SlotMachine();
 
+    echo "Cash: {$newGame->getCash()}\n";
+    $listOfBets = implode(", ", $newGame->getBetCoefficient());
+
     while(true){
-        echo "Cash: {$newGame->getCash()}\n";
-        $bet = (int) readline("Choose your bet (10, 20, 40, 80): ");
+
+        $bet = (int) readline("Choose your bet ($listOfBets): ");
 
         $isPromptActive = true;
         while($isPromptActive){
-            $bet === 10 || $bet === 20 || $bet === 40 || $bet === 80 || $bet > $newGame->getCash() ?
-                $isPromptActive = false :
-                $bet = (int) readline("Try again: ");
-        }
 
-        if($newGame->getCash() < 10){
-            die("Out of Money. Bye!");
+            foreach($newGame->getBetCoefficient() as $coefficient){
+                if($coefficient === $bet && $bet <= $newGame->getCash()){
+                    $isPromptActive = false;
+                }
+            }
+            if($isPromptActive){
+                $bet = (int) readline("Try again: ");
+            }
         }
 
         $newGame->spinSlotMachine();
         $newGame->displayBoard();
-        $newGame->winningConditions($bet);
+        echo $newGame->winningConditions($bet);
+
+        echo "Cash: {$newGame->getCash()}\n";
+        if($newGame->getCash() < 10){
+            die("Out of Money. Bye!");
+        }
 
         $prompt = readline("Do you want to play again? (Y/N) ");
         $promptActive = true;
