@@ -1,115 +1,172 @@
 <?php
 
-    class SlotMachine {
+    class SlotMachine
+    {
 
-
-        private array $values = ["A", "B", "C", "D"];
-        private int $cash = 100;
-
-        private array $slots = [
-            [" ", " ", " "],
-            [" ", " ", " "],
-            [" ", " ", " "]
+        private array $values = [
+            "A" => 5,
+            "B" => 10,
+            "C" => 20,
+            "D" => 40
         ];
 
-        private array $betCoefficient = [
+        private int $cash = 100;
+        private int $won = 0;
+
+        private int $rows = 3;
+        private int $columns = 4;
+
+        private array $slots = [];
+
+        private array $winConditions = [
+            [[0, 0], [0, 1], [0, 2], [0, 3]],
+            [[1, 0], [1, 1], [1, 2], [1, 3]],
+            [[2, 0], [2, 1], [2, 2], [2, 3]],
+            [[0, 0], [0, 1], [1, 2], [2, 3]],
+            [[2, 0], [2, 1], [1, 2], [0, 3]],
+            [[0, 0], [1, 1], [2, 2], [2, 3]],
+            [[2, 0], [1, 1], [0, 2], [0, 3]]
+        ];
+
+        private array $betCoefficients = [
             1 => 10,
             2 => 20,
             3 => 40,
             4 => 80
         ];
 
-        private array $valueCoefficient = [
-            0 => 5,
-            1 => 10,
-            2 => 20,
-            3 => 40
-        ];
-
-        function getCash(): int {
+        public function getCash(): int
+        {
             return $this->cash;
         }
 
-        function getBetCoefficient(): array {
-            return $this->betCoefficient;
+        public function getBetCoefficients(): array
+        {
+            return $this->betCoefficients;
         }
 
-        function displayBoard(){
-            echo " {$this->slots[0][0]} | {$this->slots[0][1]} | {$this->slots[0][2]} \n";
-            echo "-----------\n";
-            echo " {$this->slots[1][0]} | {$this->slots[1][1]} | {$this->slots[1][2]} \n";
-            echo "-----------\n";
-            echo " {$this->slots[2][0]} | {$this->slots[2][1]} | {$this->slots[2][2]} \n";
+        public function createGrid(): void
+        {
+            $grid = [];
+            for ($rows = 0; $rows < $this->rows; $rows++) {
+                for ($columns = 0; $columns < $this->columns; $columns++) {
+                    $grid[$rows][$columns] = "";
+                }
+            }
+            $this->slots = $grid;
         }
 
-        function spinSlotMachine(): void {
-            for($i = 0; $i < count($this->slots); $i++){
-                for($j = 0; $j < count($this->slots[$i]); $j++){
-                    $this->slots[$i][$j] = $this->values[array_rand($this->values)];
+        public function displayBoard(): string
+        {
+            $board = str_repeat(" ---", $this->columns) . PHP_EOL;
+            for ($i = 0; $i < $this->rows; $i++) {
+                for ($j = 0; $j < $this->columns; $j++) {
+                    $board .= "| {$this->slots[$i][$j]} ";
+                }
+                $board .= "|\n" . str_repeat(" ---", $this->columns) . "\n";
+            }
+            return $board;
+        }
+
+        public function spinSlotMachine(): void
+        {
+            for ($i = 0; $i < count($this->slots); $i++) {
+                for ($j = 0; $j < count($this->slots[$i]); $j++) {
+                    $this->slots[$i][$j] = array_rand($this->values);
                 }
             }
         }
 
-        function winningConditions(int $bet): string {
+        public function winningConditions(int $bet): void
+        {
             $hasWon = 0;
-            for($i = 0; $i <= 2; $i++){
-                if($this->slots[$i][0] === $this->slots[$i][1] && $this->slots[$i][1] === $this->slots[$i][2]){
-                    $hasWon += $this->valueCoefficient[array_search($this->slots[$i][0], $this->values)] * array_search($bet, $this->betCoefficient);
+            foreach ($this->winConditions as $condition) {
+                $combo = [];
+                foreach ($condition as $position) {
+                    $combo[] = $this->slots[$position[0]][$position[1]];
+                }
+
+                if (count(array_unique($combo)) == 1) {
+                    $hasWon += $this->values[$combo[0]] * array_search($bet, $this->betCoefficients);
                 }
             }
-            if($this->slots[0][0] === $this->slots[1][1] && $this->slots[1][1] === $this->slots[2][2]){
-                $hasWon += $this->valueCoefficient[array_search($this->slots[0][0], $this->values)] * array_search($bet, $this->betCoefficient);
-            }
-            if($this->slots[2][0] === $this->slots[1][1] && $this->slots[1][1] === $this->slots[0][2]){
-                $hasWon += $this->valueCoefficient[array_search($this->slots[2][0], $this->values)] * array_search($bet, $this->betCoefficient);
-            }
-            if($hasWon > 0){
-                $this->cash += $hasWon;
-                return "You won $hasWon\n";
-            }
+            $this->won = $hasWon;
+        }
 
-            $this->cash = $this->cash - $bet;
-            return "You lost $bet\n";
+        public function displayResult(int $bet): string
+        {
+            if ($this->won === 0) {
+                $this->cash = $this->cash - $bet;
+                return "You lost $$bet\n";
+            } else {
+                $this->cash = $this->cash + $this->won;
+                return "You won $$this->won\n";
+            }
+        }
+
+        public function exitProgram($input): void
+        {
+            if (strtoupper($input) === "Q") {
+                die("Bye!");
+            }
         }
 
     }
 
     $newGame = new SlotMachine();
+    $newGame->createGrid();
 
+    echo "Type q at any point within a program to exit!\n";
     echo "Cash: {$newGame->getCash()}\n";
-    $listOfBets = implode(", ", $newGame->getBetCoefficient());
+    $listOfBets = implode(", ", $newGame->getBetCoefficients());
 
-    while(true){
+    while (true) {
 
-        $bet = (int) readline("Choose your bet ($listOfBets): ");
+        $bet = readline("Choose your bet ($listOfBets): ");
 
         $isPromptActive = true;
-        while($isPromptActive){
+        while ($isPromptActive) {
 
-            foreach($newGame->getBetCoefficient() as $coefficient){
-                if($coefficient === $bet && $bet <= $newGame->getCash()){
-                    $isPromptActive = false;
+            $newGame->exitProgram($bet);
+
+            if (in_array((int)$bet, $newGame->getBetCoefficients()) && (int)$bet <= $newGame->getCash()) {
+                $isPromptActive = false;
+                continue;
+            }
+
+            $bet = readline("Try again: ");
+
+        }
+
+        $isGameActive = true;
+        while ($isGameActive) {
+            $newGame->spinSlotMachine();
+            echo $newGame->displayBoard();
+            $newGame->winningConditions($bet);
+            echo $newGame->displayResult($bet);
+
+            echo "Cash: \${$newGame->getCash()}\n";
+            if ($newGame->getCash() < min($newGame->getBetCoefficients())) {
+                die("Out of Money. Bye!");
+            }
+
+            $prompt = readline("Play again? (Y/N) ");
+            $promptActive = true;
+            while ($promptActive) {
+
+                $newGame->exitProgram($prompt);
+
+                strtoupper($prompt) === "Y" ? $promptActive = false :
+                    (strtoupper($prompt) === "N" ? $isGameActive = $promptActive = false :
+                        $prompt = readline("Try again: "));
+
+                if ($bet > $newGame->getCash()) {
+                    echo "Not enough cash to place a bet!\n";
+                    $promptActive = $isGameActive = false;
                 }
             }
-            if($isPromptActive){
-                $bet = (int) readline("Try again: ");
-            }
         }
 
-        $newGame->spinSlotMachine();
-        $newGame->displayBoard();
-        echo $newGame->winningConditions($bet);
-
-        echo "Cash: {$newGame->getCash()}\n";
-        if($newGame->getCash() < 10){
-            die("Out of Money. Bye!");
-        }
-
-        $prompt = readline("Do you want to play again? (Y/N) ");
-        $promptActive = true;
-        while($promptActive){
-            strtoupper($prompt) === "Y" ? $promptActive = false : (strtoupper($prompt) === "N" ? die("Bye") : $prompt = readline("Try again: "));
-        }
     }
 
 
