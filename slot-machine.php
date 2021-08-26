@@ -45,7 +45,7 @@
         function spinSlotMachine(): void {
             for($i = 0; $i < count($this->slots); $i++){
                 for($j = 0; $j < count($this->slots[$i]); $j++){
-                    $this->slots[$i][$j] = $this->values[rand(0, count($this->values)-1)];
+                    $this->slots[$i][$j] = $this->values[array_rand($this->values)];
                 }
             }
         }
