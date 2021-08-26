@@ -51,25 +51,25 @@
         }
 
         function winningConditions(int $bet): string {
+            $hasWon = 0;
             for($i = 0; $i <= 2; $i++){
                 if($this->slots[$i][0] === $this->slots[$i][1] && $this->slots[$i][1] === $this->slots[$i][2]){
-                    $hasWon = $this->valueCoefficient[array_search($this->slots[$i][0], $this->values)] * array_search($bet, $this->betCoefficient);
-                    $this->cash += $hasWon;
-                    return "You won $hasWon\n";
+                    $hasWon += $this->valueCoefficient[array_search($this->slots[$i][0], $this->values)] * array_search($bet, $this->betCoefficient);
                 }
             }
             if($this->slots[0][0] === $this->slots[1][1] && $this->slots[1][1] === $this->slots[2][2]){
-                $hasWon = $this->valueCoefficient[array_search($this->slots[0][0], $this->values)] * array_search($bet, $this->betCoefficient);
-                $this->cash += $hasWon;
-                return "You won $hasWon\n";
+                $hasWon += $this->valueCoefficient[array_search($this->slots[0][0], $this->values)] * array_search($bet, $this->betCoefficient);
             }
             if($this->slots[2][0] === $this->slots[1][1] && $this->slots[1][1] === $this->slots[0][2]){
-                $hasWon = $this->valueCoefficient[array_search($this->slots[2][0], $this->values)] * array_search($bet, $this->betCoefficient);
+                $hasWon += $this->valueCoefficient[array_search($this->slots[2][0], $this->values)] * array_search($bet, $this->betCoefficient);
+            }
+            if($hasWon > 0){
                 $this->cash += $hasWon;
                 return "You won $hasWon\n";
             }
-                $this->cash = $this->cash - $bet;
-                return "You lost $bet\n";
+
+            $this->cash = $this->cash - $bet;
+            return "You lost $bet\n";
         }
 
     }
