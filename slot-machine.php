@@ -3,15 +3,30 @@
     class SlotMachine
     {
 
+        private array $valueOccurrences = [
+            "A", "B", "C", "D", "J",
+            "A", "B", "C", "D",
+            "A", "B", "C", "D",
+            "A", "B", "C", "D",
+            "A", "B", "C",
+            "A", "B", "C",
+            "A", "B",
+            "A", "B",
+            "A"
+        ];
+
         private array $values = [
             "A" => 5,
             "B" => 10,
-            "C" => 20,
-            "D" => 40
+            "C" => 40,
+            "D" => 100,
+            "J" => 1000
         ];
 
-        private int $cash = 100;
+        private int $cash = 300;
         private int $payout = 0;
+        private int $noForJackpot = 3;
+        private int $currentJackpotNo = 0;
 
         private int $rows = 3;
         private int $columns = 4;
@@ -70,18 +85,26 @@
 
         public function spinSlotMachine(): void
         {
+            $jackpot = 0;
             for ($i = 0; $i < count($this->slots); $i++) {
                 for ($j = 0; $j < count($this->slots[$i]); $j++) {
-                    $this->slots[$i][$j] = array_rand($this->values);
+                    $this->slots[$i][$j] = $this->valueOccurrences[array_rand($this->valueOccurrences)];
+                    if($this->slots[$i][$j] === "J"){
+                        $jackpot++;
+                    }
                 }
             }
+            $this->currentJackpotNo = $jackpot;
         }
 
         public function winningConditions(int $bet): void
         {
             $hasWon = 0;
+
             foreach ($this->winConditions as $condition) {
+
                 $combo = [];
+
                 foreach ($condition as $position) {
                     $combo[] = $this->slots[$position[0]][$position[1]];
                 }
@@ -89,25 +112,32 @@
                 if (count(array_unique($combo)) == 1) {
                     $hasWon += $this->values[$combo[0]] * array_search($bet, $this->betCoefficients);
                 }
+
             }
-            $this->payout = $hasWon;
+
+            $this->currentJackpotNo >= $this->noForJackpot ? $this->payout = $this->values["J"] *
+                array_search($bet, $this->betCoefficients) :  $this->payout = $hasWon;
+
         }
 
-        public function displayResult(int $bet): string
+        public function displayPayout(int $bet): string
         {
+            if($this->currentJackpotNo >= $this->noForJackpot){
+                $this->cash = $this->cash + $this->payout;
+                return "Congratulations! You got JACKPOT!!! $$this->payout\n";
+            }
             if ($this->payout === 0) {
                 $this->cash = $this->cash - $bet;
                 return "You lost $$bet\n";
-            } else {
-                $this->cash = $this->cash + $this->payout;
-                return "You won $$this->payout\n";
             }
+            $this->cash = $this->cash + $this->payout;
+            return "You won $$this->payout\n";
         }
 
         public function exitProgram($input): void
         {
             if (strtoupper($input) === "Q") {
-                die("Bye!");
+                die("Bye! You left with $$this->cash");
             }
         }
 
@@ -143,7 +173,7 @@
             $newGame->spinSlotMachine();
             echo $newGame->displayBoard();
             $newGame->winningConditions($bet);
-            echo $newGame->displayResult($bet);
+            echo $newGame->displayPayout($bet);
 
             echo "Cash: \${$newGame->getCash()}\n";
             if ($newGame->getCash() < min($newGame->getBetCoefficients())) {
