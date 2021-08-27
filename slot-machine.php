@@ -11,7 +11,7 @@
         ];
 
         private int $cash = 100;
-        private int $won = 0;
+        private int $payout = 0;
 
         private int $rows = 3;
         private int $columns = 4;
@@ -90,17 +90,17 @@
                     $hasWon += $this->values[$combo[0]] * array_search($bet, $this->betCoefficients);
                 }
             }
-            $this->won = $hasWon;
+            $this->payout = $hasWon;
         }
 
         public function displayResult(int $bet): string
         {
-            if ($this->won === 0) {
+            if ($this->payout === 0) {
                 $this->cash = $this->cash - $bet;
                 return "You lost $$bet\n";
             } else {
-                $this->cash = $this->cash + $this->won;
-                return "You won $$this->won\n";
+                $this->cash = $this->cash + $this->payout;
+                return "You won $$this->payout\n";
             }
         }
 
