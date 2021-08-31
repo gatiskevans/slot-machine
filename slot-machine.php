@@ -146,7 +146,7 @@
     $newGame = new SlotMachine();
     $newGame->createGrid();
 
-    echo "Type q at any point within a program to exit!\n";
+    echo "Type q at any point within the program to exit!\n";
     echo "Cash: {$newGame->getCash()}\n";
     $listOfBets = implode(", ", $newGame->getBetCoefficients());
 
